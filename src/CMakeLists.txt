@@ -2,9 +2,16 @@ add_library(libs "")
 
 target_sources( libs 
     PRIVATE 
-        InputParser.cpp 
+        InputParser.cpp
+        InputData.cpp 
+        InitialConditions.cpp
     PRIVATE 
-        InputParser.h )
+        InputParser.h
+        Particles.h
+        Types.h
+        CSVParticleWriter.h
+        InputData.h
+        InitialConditions.h )
 
 
 target_link_libraries(libs PRIVATE warning_flags)

@@ -1,0 +1,7 @@
+numberOfInitialParticles = 500
+particleMass             = 1
+gravitationalConstant    = 1
+softeningLength          = 1e-2
+numberOfTimeSteps        = 100
+timeStepSize             = 0.01
+outputFilePath           = "output/"

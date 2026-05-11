@@ -1,1 +1,2 @@
-# Barnes-Hut-Simulator
+# Galaxy
+Solves the N-body problem.
