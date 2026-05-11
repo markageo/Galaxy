@@ -1,5 +1,7 @@
 add_library(libs "")
 
+target_link_libraries(libs PUBLIC OpenMP::OpenMP_CXX)
+
 target_sources( libs 
     PRIVATE 
         InputParser.cpp

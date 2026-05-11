@@ -52,6 +52,7 @@ public:
     void ComputeAccelerations() override
     {
         // Brute force
+        #pragma omp parallel for
         for ( intType p1 = 0; p1 != m_particles.count; p1++ ) {
 
             for ( intType i = 0; i != 3; i++ ) {
@@ -87,6 +88,8 @@ public:
     void Kick() override
     {
         for ( intType i = 0; i != 3; i++ ) {
+
+            #pragma omp parallel for
             for ( intType p = 0; p != m_particles.count; p++ ) {
 
                 m_particles.vel[i][p] += 0.5f * m_particles.accel[i][p] * m_inputData.timeStepSize;
@@ -100,6 +103,8 @@ public:
     void Drift() override
     {
         for ( intType i = 0; i != 3; i++ ) {
+
+            #pragma omp parallel for
             for ( intType p = 0; p != m_particles.count; p++ ) {
 
                 m_particles.pos[i][p] += 0.5f * m_particles.vel[i][p] * m_inputData.timeStepSize;

@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <memory>
+#include <omp.h>
 
 #include "Particles.h"
 #include "CSVParticleWriter.h"
@@ -28,6 +29,8 @@ int main(int argc, char const *argv[])
     std::string filename = inputData.outputPath + "particles_" + std::to_string(0) + ".csv";
     WriteParticleStateToFile( particles, filename );
 
+    bool writeDuringRun = inputData.outputInterval != 0;
+
     // Time loop
     std::cout << "Iteration 0 (Written to file)" << std::endl;
     for ( intType n = 1; n <= inputData.numberOfTimeSteps; n++ ) {
@@ -42,7 +45,8 @@ int main(int argc, char const *argv[])
         std::cout << "Iteration " + std::to_string( n );
         
         // Write to file
-        bool outputThisIteration =  ( n % inputData.outputInterval ) == 0
+
+        bool outputThisIteration =  ( writeDuringRun && ( n % inputData.outputInterval ) == 0 )
                                  || n == inputData.numberOfTimeSteps;
         if ( outputThisIteration ) {
             std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
