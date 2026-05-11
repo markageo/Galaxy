@@ -19,7 +19,7 @@ int main(int argc, char const *argv[])
 
     InputData inputData = ReadInputDataFromCommandLine( argc, argv );
 
-    Particles particles = RandomStatioaryParticles( inputData, -1.0f, 1.0f );
+    Particles particles = ExponentialDisk( inputData );
 
     std::unique_ptr<EngineBase> enginePtr = std::make_unique<EngineCPU>( particles, inputData );
 
@@ -29,6 +29,7 @@ int main(int argc, char const *argv[])
     WriteParticleStateToFile( particles, filename );
 
     // Time loop
+    std::cout << "Iteration 0 (Written to file)" << std::endl;
     for ( intType n = 1; n <= inputData.numberOfTimeSteps; n++ ) {
 
         // Propagate particles one timestep
@@ -37,11 +38,19 @@ int main(int argc, char const *argv[])
         enginePtr->Drift();
         enginePtr->ComputeAccelerations();
         enginePtr->Kick();
+
+        std::cout << "Iteration " + std::to_string( n );
         
         // Write to file
-        std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
-        WriteParticleStateToFile( particles, filename );
+        bool outputThisIteration =  ( n % inputData.outputInterval ) == 0
+                                 || n == inputData.numberOfTimeSteps;
+        if ( outputThisIteration ) {
+            std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
+            WriteParticleStateToFile( particles, filename );
+            std::cout << " (Written to file)";
+        }
 
+        std::cout << std::endl;
     }
 
     

@@ -7,9 +7,12 @@
 namespace GALAXY
 {
 
-Particles RandomStatioaryParticles( const InputData &, 
-                                    const floatType, 
-                                    const floatType );
+Particles RandomStationaryParticles( const InputData &, 
+                                     const floatType, 
+                                     const floatType );
+
+
+Particles ExponentialDisk( const InputData & );
 
 }
 

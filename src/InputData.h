@@ -11,12 +11,18 @@ namespace GALAXY
 struct InputData 
 {
     intType numberOfInitialParticles;
-    floatType particleMass;
-    floatType gravitationalConstant;
-    floatType softeningLength;
+    floatType diskRadius, 
+              diskCutoffRadius, 
+              diskThickness, 
+              diskCentralSurfaceDensity, 
+              toomreStabilityParameter, 
+              gravitationalConstant, 
+              softeningLength;
     intType numberOfTimeSteps;
     floatType timeStepSize;
+
     std::string outputPath;
+    intType outputInterval;
 };
 
 InputData ReadInputDataFromCommandLine( int , char const ** );

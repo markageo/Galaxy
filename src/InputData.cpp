@@ -101,12 +101,17 @@ InputData ReadInputData( const std::string &inputFilename )
     InputData inputData;
     std::string inputFileDirectory = IOTOOLS::RelativePath( inputFilename );
 
-    inputData.numberOfInitialParticles = tree.get<intType>( "numberOfInitialParticles" );
-    inputData.gravitationalConstant    = tree.get<floatType>( "gravitationalConstant" );
-    inputData.particleMass             = tree.get<floatType>( "particleMass" );
-    inputData.softeningLength          = tree.get<floatType>( "softeningLength" );
-    inputData.timeStepSize             = tree.get<floatType>( "timeStepSize" );
-    inputData.numberOfTimeSteps        = tree.get<intType>( "numberOfTimeSteps" );
+    inputData.numberOfInitialParticles  = tree.get<intType>( "numberOfInitialParticles" );
+    inputData.gravitationalConstant     = tree.get<floatType>( "gravitationalConstant" );
+    inputData.diskRadius                = tree.get<floatType>( "diskRadius" );
+    inputData.diskCutoffRadius          = tree.get<floatType>( "diskCutoffRadius" );
+    inputData.diskThickness             = tree.get<floatType>( "diskThickness" );
+    inputData.diskCentralSurfaceDensity = tree.get<floatType>( "diskCentralSurfaceDensity" );
+    inputData.toomreStabilityParameter  = tree.get<floatType>( "toomreStabilityParameter" );
+    inputData.softeningLength           = tree.get<floatType>( "softeningLength" );
+    inputData.timeStepSize              = tree.get<floatType>( "timeStepSize" );
+    inputData.numberOfTimeSteps         = tree.get<intType>( "numberOfTimeSteps" );
+    inputData.outputInterval            = tree.get<intType>( "outputFileTimestepInterval" );
 
     inputData.outputPath = tree.get<std::string>("outputFilePath");
     IOTOOLS::PrependRelativePath( inputData.outputPath, inputFileDirectory );
