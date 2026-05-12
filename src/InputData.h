@@ -21,6 +21,11 @@ struct InputData
     intType numberOfTimeSteps;
     floatType timeStepSize;
 
+    enum class Backends {
+        CUDA, OpenMP
+    };
+    Backends backend;
+
     std::string outputPath;
     intType outputInterval;
 };

@@ -2,43 +2,46 @@
 #define GALAXY_PARTICLES
 
 #include "Types.h"
-#include <vector>
-#include <array>
 
 namespace GALAXY 
 {
 
 struct Particles
 {
-    Particles() : count( 0 ) {};
-
-    void Reserve( const intType n ) 
-    {
-        for ( intType i = 0; i != 3; i++ ) {
-            pos[i].reserve(n);
-            vel[i].reserve(n);
-            accel[i].reserve(n);
-        }
-        mass.reserve(n);
-    }
-
-    void AddParticleBack()
-    {
-        for ( intType i = 0; i != 3; i++ ) {
-            pos[i].push_back( 0.0f );
-            vel[i].push_back( 0.0f );
-            accel[i].push_back( 0.0f );
-        }
-        mass.push_back( 0.0f );
-        count++;
-    }
-
     intType count;
-    std::array< std::vector<floatType>, 3 > pos;
-    std::array< std::vector<floatType>, 3 > vel;
-    std::array< std::vector<floatType>, 3 > accel;
-    std::vector<floatType> mass;
+    floatType* pos[3];
+    floatType* vel[3];
+    floatType* accel[3];
+    floatType* mass;
 };
+
+
+inline Particles CreateParticlesHeap( intType n )
+{
+    Particles particles;
+    
+    particles.count = n;
+    for ( intType i = 0; i != 3; i++ ) {
+        particles.pos[i]   = new floatType[n];
+        particles.vel[i]   = new floatType[n];
+        particles.accel[i] = new floatType[n];
+    }
+    particles.mass = new floatType[n];
+
+    return particles;
+}
+
+
+inline void FreeParticlesHeap( Particles &particles )
+{
+    particles.count = 0;
+    for ( intType i = 0; i != 3; i++ ) {
+        delete[] particles.pos[i];
+        delete[] particles.vel[i];
+        delete[] particles.accel[i];
+    }
+    delete[] particles.mass;
+}
 
 
 }   // end namespace GALAXY

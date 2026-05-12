@@ -113,6 +113,16 @@ InputData ReadInputData( const std::string &inputFilename )
     inputData.numberOfTimeSteps         = tree.get<intType>( "numberOfTimeSteps" );
     inputData.outputInterval            = tree.get<intType>( "outputFileTimestepInterval" );
 
+    // Backend from string
+    std::string backendString = tree.get<std::string>( "backend" );
+    if ( backendString == "OpenMP" ) {
+        inputData.backend = InputData::Backends::OpenMP;
+    } else if ( backendString == "CUDA" ) {
+        inputData.backend = InputData::Backends::CUDA;
+    } else {
+        throw std::runtime_error( "'" + backendString + "' is not a valid backend!" );
+    }
+
     inputData.outputPath = tree.get<std::string>("outputFilePath");
     IOTOOLS::PrependRelativePath( inputData.outputPath, inputFileDirectory );
 

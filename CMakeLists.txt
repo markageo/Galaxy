@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 
 # set the project name and version
-project(galaxy VERSION 1.0)
+project(galaxy VERSION 1.0 LANGUAGES CXX CUDA)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
+
 
 # Default executable location
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -15,15 +16,8 @@ set (CMAKE_CXX_STANDARD 20)
 # For clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Add compiler flags
-add_library(compiler_flags INTERFACE)
-target_compile_features(compiler_flags INTERFACE cxx_std_20)
-target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native;-mno-avx512f")
 
-add_library(warning_flags INTERFACE)
-target_compile_features(warning_flags INTERFACE cxx_std_20)
-target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic")
-
+set(CMAKE_CUDA_ARCHITECTURES native CACHE STRING "")
 
 # Add address sanitizer to the debug build
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")

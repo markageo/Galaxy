@@ -7,14 +7,11 @@
 namespace GALAXY
 {
 
-Particles RandomStationaryParticles( const InputData &inputData,
-                                     const floatType positionLowerBound,
-                                     const floatType positionUpperBound )
+void SetRandomStationaryParticles( Particles &particles,
+                                   const InputData &inputData,
+                                   const floatType positionLowerBound,
+                                   const floatType positionUpperBound )
 {
-
-    Particles particles;
-    particles.Reserve( inputData.numberOfInitialParticles );
-
     std::random_device rd; 
     std::mt19937 gen(rd()); 
     std::uniform_real_distribution<floatType> distr(positionLowerBound, positionUpperBound); 
@@ -22,18 +19,14 @@ Particles RandomStationaryParticles( const InputData &inputData,
     // Initialise particles at random positions on the square [positionLowerBound, positionUpperBound]^3
     for ( intType p = 0; p != inputData.numberOfInitialParticles; p++ ) {
 
-        particles.AddParticleBack();
-
         for ( intType i = 0; i != 3; i++ ) {
-            particles.pos[i].back()    = distr(gen);
-            particles.vel[i].back()    = 0.0f;
-            particles.accel[i].back()  = 0.0f;
+            particles.pos[i][p]    = distr(gen);
+            particles.vel[i][p]    = 0.0f;
+            particles.accel[i][p]  = 0.0f;
         }
-        particles.mass.back() = 1.0f;
+        particles.mass[p] = 1.0f;
 
     }
-
-    return particles;
 }
 
 
@@ -79,7 +72,8 @@ floatType GetCircularDiskVelocity( floatType r,
 
 
 
-Particles ExponentialDisk( const InputData &inputData )
+void SetExponentialDisk( Particles &particles,
+                         const InputData &inputData )
 {
     // Exponential disk with surface density profile:
     // sigma = sigma0 * exp( r / Rd )
@@ -87,9 +81,6 @@ Particles ExponentialDisk( const InputData &inputData )
     // sigma0 - disk surface density at R = 0
     // r      - radial coordinate
     // Rd     - disk radius
-
-    Particles particles;
-    particles.Reserve( inputData.numberOfInitialParticles );
 
     std::random_device rd; 
     std::mt19937 gen(rd()); 
@@ -100,8 +91,6 @@ Particles ExponentialDisk( const InputData &inputData )
                     particleMass = totalDiskMass / inputData.numberOfInitialParticles;
 
     for ( intType p = 0; p != inputData.numberOfInitialParticles; p++ ) {
-
-        particles.AddParticleBack();
 
         // Sample radius
         const floatType r = SampleExponentialRadius( inputData.diskRadius, inputData.diskCutoffRadius, gen, distr );
@@ -114,28 +103,25 @@ Particles ExponentialDisk( const InputData &inputData )
         const floatType tol = 1e-6;
         const floatType z = 2.0f * inputData.diskThickness * std::tanh( 2.0f * (1.0f - tol) * ( distr(gen) - 0.5f ) );    
 
-        particles.pos[0].back()    = r * std::cos( theta );
-        particles.pos[1].back()    = r * std::sin( theta );
-        particles.pos[2].back()    = z;
+        particles.pos[0][p] = r * std::cos( theta );
+        particles.pos[1][p] = r * std::sin( theta );
+        particles.pos[2][p] = z;
 
         const floatType velocityMagnitude = GetCircularDiskVelocity( r, inputData.diskCentralSurfaceDensity, inputData.diskRadius, inputData.gravitationalConstant );
 
-        particles.vel[0].back()    = - velocityMagnitude * std::sin( theta );
-        particles.vel[1].back()    =   velocityMagnitude * std::cos( theta );
-        particles.vel[2].back()    = 0.0f;
+        particles.vel[0][p] = - velocityMagnitude * std::sin( theta );
+        particles.vel[1][p] =   velocityMagnitude * std::cos( theta );
+        particles.vel[2][p] = 0.0f;
 
 
         // Zero acceleration
         for ( intType i = 0; i != 3; i++ ) {
-            particles.accel[i].back()  = 0.0f;
+            particles.accel[i][p]= 0.0f;
         }
-        
 
-        particles.mass.back() = particleMass;
+        particles.mass[p] = particleMass;
 
     }
-
-    return particles;
 
 }
 

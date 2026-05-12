@@ -1,4 +1,7 @@
 numberOfInitialParticles   = 1000
+numberOfTimeSteps          = 100
+timeStepSize               = 0.1
+
 diskRadius                 = 1
 diskCutoffRadius           = 5
 diskThickness              = 0.1
@@ -6,7 +9,8 @@ diskCentralSurfaceDensity  = 0.16
 toomreStabilityParameter   = 1.5
 gravitationalConstant      = 1
 softeningLength            = 0.03
-numberOfTimeSteps          = 100
-timeStepSize               = 0.1
+
+backend                    = CUDA
+
 outputFilePath             = "output/"
 outputFileTimestepInterval = 0

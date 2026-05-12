@@ -7,17 +7,21 @@ target_sources( libs
         InputParser.cpp
         InputData.cpp 
         InitialConditions.cpp
+        EngineCPU.cpp
+        EngineCUDA.cu
     PRIVATE 
         InputParser.h
         Particles.h
         Types.h
         CSVParticleWriter.h
         InputData.h
-        InitialConditions.h )
+        InitialConditions.h
+        Engine.h )
 
 
-target_link_libraries(libs PRIVATE warning_flags)
-target_link_libraries(libs PUBLIC compiler_flags)
+target_compile_options(libs PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic>
+)
 
 # Main solver executable
 add_executable(galaxy main.cpp)

@@ -2,3 +2,5 @@ build
 galaxy
 
 .csv
+.cache
+.vscode
