@@ -30,7 +30,9 @@ int main(int argc, char const *argv[])
             enginePtr = MakeEngineCPU( particles, inputData );
             break;
         case InputData::Backends::CUDA:
-            enginePtr = MakeEngineCUDA( particles, inputData );
+            #ifdef USE_CUDA
+                enginePtr = MakeEngineCUDA( particles, inputData );
+            #endif
             break;
     }
     enginePtr->Initialise();

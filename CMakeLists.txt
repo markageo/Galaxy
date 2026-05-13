@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # set the project name and version
-project(galaxy VERSION 1.0 LANGUAGES CXX CUDA)
+project(galaxy VERSION 1.0 LANGUAGES CXX)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
@@ -16,8 +16,24 @@ set (CMAKE_CXX_STANDARD 20)
 # For clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Openmp, so that it works with clang
+find_package(OpenMP REQUIRED)
 
-set(CMAKE_CUDA_ARCHITECTURES native CACHE STRING "")
+# Check if CUDA is available on the system
+include(CheckLanguage)
+check_language(CUDA)
+
+if (CMAKE_CUDA_COMPILER)
+    set(CMAKE_CUDA_ARCHITECTURES native CACHE STRING "")
+    set(USE_CUDA on)
+    enable_language( CUDA )
+    add_compile_definitions( USE_CUDA )
+else()
+    set(USE_CUDA off)
+    message(STATUS "CUDA not found, only OpenMP backend will be available.")
+endif()
+
+
 
 # Add address sanitizer to the debug build
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
@@ -32,10 +48,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" )
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of build (Debug, Release etc." FORCE)
 endif()
-
-
-# Openmp, so that it works with clang
-find_package(OpenMP REQUIRED)
 
 
 add_subdirectory(src)

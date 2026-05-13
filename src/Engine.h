@@ -23,7 +23,10 @@ class EngineBase {
 
 // Factory functions
 std::unique_ptr<EngineBase> MakeEngineCPU( Particles &, const InputData & );    // Definition in EngineCPU.cpp
+
+#ifdef USE_CUDA
 std::unique_ptr<EngineBase> MakeEngineCUDA( Particles &, const InputData & );   // Definition in EngineCUDA.cpp
+#endif
 
 }   // end namespace GALAXY
 

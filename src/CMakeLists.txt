@@ -16,7 +16,12 @@ target_sources( libs
         CSVParticleWriter.h
         InputData.h
         InitialConditions.h
-        Engine.h )
+        Engine.h 
+)
+
+if (USE_CUDA)
+    target_sources( libs PRIVATE EngineCUDA.cu )
+endif()
 
 
 target_compile_options(libs PRIVATE

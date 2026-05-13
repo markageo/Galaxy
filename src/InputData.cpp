@@ -118,7 +118,11 @@ InputData ReadInputData( const std::string &inputFilename )
     if ( backendString == "OpenMP" ) {
         inputData.backend = InputData::Backends::OpenMP;
     } else if ( backendString == "CUDA" ) {
-        inputData.backend = InputData::Backends::CUDA;
+        #ifdef USE_CUDA
+            inputData.backend = InputData::Backends::CUDA;
+        #else
+            throw std::runtime_error( "CUDA not available, cannot use as backend!" );
+        #endif
     } else {
         throw std::runtime_error( "'" + backendString + "' is not a valid backend!" );
     }
