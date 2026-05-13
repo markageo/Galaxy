@@ -67,10 +67,6 @@ int main(int argc, char const *argv[])
             std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
             WriteParticleStateToFile( particles, filename );
             std::cout << " (Written to file)";
-
-            // Copy back if there is another iteration
-            if ( !isFinalIteration )
-                enginePtr->CopyHostToDevice();
         }
 
         std::cout << std::endl;

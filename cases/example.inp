@@ -1,5 +1,5 @@
-numberOfInitialParticles   = 1000
-numberOfTimeSteps          = 100
+numberOfInitialParticles   = 10000
+numberOfTimeSteps          = 1000
 timeStepSize               = 0.1
 
 diskRadius                 = 1
@@ -13,4 +13,4 @@ softeningLength            = 0.03
 backend                    = CUDA
 
 outputFilePath             = "output/"
-outputFileTimestepInterval = 0
+outputFileTimestepInterval = 3
