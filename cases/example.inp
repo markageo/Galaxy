@@ -1,16 +1,18 @@
-numberOfInitialParticles   = 10000
+numberOfInitialParticles   = 5000
 numberOfTimeSteps          = 1000
 timeStepSize               = 0.1
 
 diskRadius                 = 1
 diskCutoffRadius           = 5
 diskThickness              = 0.1
-diskCentralSurfaceDensity  = 0.16
+diskMass                   = 1
 toomreStabilityParameter   = 1.5
+haloMass                   = 5
+haloScaleRadius            = 10
 gravitationalConstant      = 1
 softeningLength            = 0.03
 
-backend                    = CUDA
+backend                    = OpenMP
 
 outputFilePath             = "output/"
-outputFileTimestepInterval = 3
+outputFileTimestepInterval = 4

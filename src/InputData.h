@@ -14,8 +14,10 @@ struct InputData
     floatType diskRadius, 
               diskCutoffRadius, 
               diskThickness, 
-              diskCentralSurfaceDensity, 
+              diskMass, 
               toomreStabilityParameter, 
+              haloMass,
+              haloScaleRadius,
               gravitationalConstant, 
               softeningLength;
     intType numberOfTimeSteps;

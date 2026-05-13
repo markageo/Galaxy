@@ -87,8 +87,9 @@ void SetExponentialDisk( Particles &particles,
     std::uniform_real_distribution<floatType> distr(0.0f, 1.0f); 
 
     // Mass of each particle, comes from integral of disk surface density profile 
-    const floatType totalDiskMass = inputData.diskCentralSurfaceDensity * 2.0f * M_PI * std::pow( inputData.diskRadius, 2.0f ),
-                    particleMass = totalDiskMass / inputData.numberOfInitialParticles;
+    const floatType diskSurfaceDensity = inputData.diskMass / ( 2.0f * M_PI * std::pow( inputData.diskRadius, 2.0f ) ),
+                    particleMass = inputData.diskMass / inputData.numberOfInitialParticles;
+
 
     for ( intType p = 0; p != inputData.numberOfInitialParticles; p++ ) {
 
@@ -107,7 +108,7 @@ void SetExponentialDisk( Particles &particles,
         particles.pos[1][p] = r * std::sin( theta );
         particles.pos[2][p] = z;
 
-        const floatType velocityMagnitude = GetCircularDiskVelocity( r, inputData.diskCentralSurfaceDensity, inputData.diskRadius, inputData.gravitationalConstant );
+        const floatType velocityMagnitude = GetCircularDiskVelocity( r, diskSurfaceDensity, inputData.diskRadius, inputData.gravitationalConstant );
 
         particles.vel[0][p] = - velocityMagnitude * std::sin( theta );
         particles.vel[1][p] =   velocityMagnitude * std::cos( theta );

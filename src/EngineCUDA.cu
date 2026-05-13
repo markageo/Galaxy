@@ -202,6 +202,8 @@ __global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
                                              const floatType* __restrict__ mass,
                                              floatType gravitationalConstant, 
                                              floatType softeningLength,
+                                             floatType haloMass, 
+                                             floatType haloScaleRadius,
                                              intType nParticles )
 {
     // Shared particle data for a given tile, size is dynamically allocated
@@ -275,9 +277,15 @@ __global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
     }
 
     if ( p1Valid ) {
-        ax[p1] = axTemp;
-        ax[p1] = ayTemp;
-        az[p1] = azTemp;
+
+        // Add acceleration due to Hernquist Halo - assumes Galaxy is centered at (0, 0, 0)
+        const floatType R = sqrt( x[p1]*x[p1] + y[p1]*y[p1] + z[p1]*z[p1] );
+        const floatType K = - gravitationalConstant * haloMass 
+                          / ( ( R + haloScaleRadius ) * ( R + haloScaleRadius ) * R );
+        
+        ax[p1] = axTemp + K * x[p1];
+        ax[p1] = ayTemp + K * y[p1];
+        az[p1] = azTemp + K * z[p1];
     }
 
 }
@@ -298,6 +306,8 @@ void EngineCUDA::ComputeAccelerations()
         m_particlesDevice.mass,
         m_inputData.gravitationalConstant,
         m_inputData.softeningLength,
+        m_inputData.haloMass,
+        m_inputData.haloScaleRadius,
         m_particlesDevice.count
     );
 

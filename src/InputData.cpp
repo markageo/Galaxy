@@ -106,7 +106,9 @@ InputData ReadInputData( const std::string &inputFilename )
     inputData.diskRadius                = tree.get<floatType>( "diskRadius" );
     inputData.diskCutoffRadius          = tree.get<floatType>( "diskCutoffRadius" );
     inputData.diskThickness             = tree.get<floatType>( "diskThickness" );
-    inputData.diskCentralSurfaceDensity = tree.get<floatType>( "diskCentralSurfaceDensity" );
+    inputData.diskMass                  = tree.get<floatType>( "diskMass" );
+    inputData.haloMass                  = tree.get<floatType>( "haloMass" );
+    inputData.haloScaleRadius           = tree.get<floatType>( "haloScaleRadius" );
     inputData.toomreStabilityParameter  = tree.get<floatType>( "toomreStabilityParameter" );
     inputData.softeningLength           = tree.get<floatType>( "softeningLength" );
     inputData.timeStepSize              = tree.get<floatType>( "timeStepSize" );

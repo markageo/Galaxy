@@ -70,13 +70,25 @@ void EngineCPU::ComputeAccelerations()
                                + std::pow( m_inputData.softeningLength, 2.0f );
 
             const floatType R3 = std::pow( R2, 3.0f / 2.0f );
-
             const floatType K = m_inputData.gravitationalConstant * m_particles.mass[p2] / R3;   // Divide out mass of current particle (p1) to get acceleration
-        
+
+
             for ( intType i = 0; i != 3; i++ ) {
                 m_particles.accel[i][p1] += K * ( m_particles.pos[i][p2] - m_particles.pos[i][p1] );
             }
 
+        }
+
+        // Acceleration due to Hernquist Halo - assumes Galaxy is centered at (0, 0, 0)
+        const floatType R = sqrt( 
+                                std::pow( m_particles.pos[0][p1], 2.0f )
+                              + std::pow( m_particles.pos[1][p1], 2.0f )
+                              + std::pow( m_particles.pos[2][p1], 2.0f )
+                            );
+        const floatType K = - m_inputData.gravitationalConstant * m_inputData.haloMass 
+                          / std::pow( R + m_inputData.haloScaleRadius , 2.0f ) / R;
+        for ( intType i = 0; i != 3; i++ ) {
+            m_particles.accel[i][p1] += K * ( m_particles.pos[i][p1] );
         }
     }
 }
