@@ -21,6 +21,7 @@ class EngineCPU : public EngineBase
         void ComputeAccelerations() override;
         void Kick() override;
         void Drift() override;
+        void Synchronise() override;
 
 };
 
@@ -45,6 +46,7 @@ EngineCPU::EngineCPU( Particles &particles,
 void EngineCPU::Initialise() { /* NULL */ };
 void EngineCPU::CopyHostToDevice() { /* NULL */ };
 void EngineCPU::CopyDeviceToHost() { /* NULL */ };
+void EngineCPU::Synchronise() { /* NULL */ };
 
 
 void EngineCPU::ComputeAccelerations()

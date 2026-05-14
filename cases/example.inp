@@ -1,4 +1,4 @@
-numberOfInitialParticles   = 5000
+numberOfInitialParticles   = 50000
 numberOfTimeSteps          = 1000
 timeStepSize               = 0.1
 
@@ -12,7 +12,7 @@ haloScaleRadius            = 10
 gravitationalConstant      = 1
 softeningLength            = 0.03
 
-backend                    = OpenMP
+backend                    = CUDA
 
 outputFilePath             = "output/"
-outputFileTimestepInterval = 4
+outputFileTimestepInterval = 5
