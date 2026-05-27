@@ -19,6 +19,7 @@ class EngineBase {
         virtual void Kick() = 0;
         virtual void Drift() = 0;
         virtual void ComputeAccelerations() = 0;
+        virtual void Synchronise() = 0;
 };
 
 // Factory functions

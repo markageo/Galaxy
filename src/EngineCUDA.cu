@@ -23,9 +23,9 @@ constexpr int BLOCK_SIZE = 256;
 
 class EngineCUDA : public EngineBase 
 {
-    Particles m_particles,
-              m_particlesPinned,
-              m_particlesDevice;
+    Particles &m_particles,
+               m_particlesPinned,
+               m_particlesDevice;
     const InputData &m_inputData;
 
     cudaStream_t m_stream;
@@ -43,6 +43,7 @@ class EngineCUDA : public EngineBase
         void ComputeAccelerations() override;
         void Kick() override;
         void Drift() override;
+        void Synchronise() override;
 
     private: 
 
@@ -97,6 +98,13 @@ void EngineCUDA::Initialise()
 
 
 
+void EngineCUDA::Synchronise()
+{
+    CUDA_CHECK(cudaStreamSynchronize(m_stream));
+} 
+
+
+
 void EngineCUDA::AllocateDeviceMemory()
 {
     const intType bytes = m_particles.count * sizeof(floatType);
@@ -137,11 +145,11 @@ void EngineCUDA::FreeMemory()
 
     // Device memory
     for ( intType i = 0; i != 3; i++ ) {
-        cudaFree(m_particlesPinned.pos[i]);
-        cudaFree(m_particlesPinned.vel[i]);
-        cudaFree(m_particlesPinned.accel[i]);
+        cudaFree(m_particlesDevice.pos[i]);
+        cudaFree(m_particlesDevice.vel[i]);
+        cudaFree(m_particlesDevice.accel[i]);
     }
-    cudaFree(m_particlesPinned.mass);
+    cudaFree(m_particlesDevice.mass);
 }
 
 
@@ -175,11 +183,11 @@ void EngineCUDA::CopyDeviceToHost()
 
     // Copy to host pinned memory
     for ( intType i = 0; i != 3; i++ ) {
-        CUDA_CHECK(cudaMemcpy(m_particlesPinned.pos[i]  , m_particlesDevice.pos[i]  , bytes, cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(m_particlesPinned.vel[i]  , m_particlesDevice.vel[i]  , bytes, cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(m_particlesPinned.accel[i], m_particlesDevice.accel[i], bytes, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(m_particlesPinned.pos[i]  , m_particlesDevice.pos[i]  , bytes, cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(m_particlesPinned.vel[i]  , m_particlesDevice.vel[i]  , bytes, cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(m_particlesPinned.accel[i], m_particlesDevice.accel[i], bytes, cudaMemcpyDeviceToHost));
     }
-    CUDA_CHECK(cudaMemcpy(m_particlesPinned.mass, m_particlesDevice.mass, bytes, cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(m_particlesPinned.mass, m_particlesDevice.mass, bytes, cudaMemcpyDeviceToHost));
 
 
     // Copy from pinned memory to heap
@@ -250,10 +258,10 @@ __global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
             for ( intType i = 0; i != blockDim.x; i++ ) {
 
                 const intType p2Global = tile * blockDim.x + i;
-                if ( p2Global > nParticles )
+                if ( p2Global >= nParticles )
                     continue;
 
-                if ( p2Global == p2 )
+                if ( p2Global == p1 )
                     continue;
 
                 const floatType dx = xTile[i] - x[p1],
@@ -284,7 +292,7 @@ __global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
                           / ( ( R + haloScaleRadius ) * ( R + haloScaleRadius ) * R );
         
         ax[p1] = axTemp + K * x[p1];
-        ax[p1] = ayTemp + K * y[p1];
+        ay[p1] = ayTemp + K * y[p1];
         az[p1] = azTemp + K * z[p1];
     }
 
@@ -322,7 +330,7 @@ __global__ void Kick_kernel( floatType* __restrict__ vx,
                              const floatType* __restrict__ ax,
                              const floatType* __restrict__ ay,
                              const floatType* __restrict__ az,
-                             floatType nParticles, 
+                             intType nParticles, 
                              floatType dt )
 {
     intType i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -358,7 +366,7 @@ __global__ void Drift_kernel( floatType* __restrict__ x,
                               const floatType* __restrict__ vx,
                               const floatType* __restrict__ vy,
                               const floatType* __restrict__ vz,
-                              floatType nParticles, 
+                              intType nParticles, 
                               floatType dt )
 {
     intType i = blockIdx.x * blockDim.x + threadIdx.x;

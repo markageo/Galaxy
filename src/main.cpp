@@ -54,6 +54,7 @@ int main(int argc, char const *argv[])
         enginePtr->Drift();
         enginePtr->ComputeAccelerations();
         enginePtr->Kick();
+        enginePtr->Synchronise();
 
         std::cout << "Iteration " + std::to_string( n );
         
@@ -62,6 +63,7 @@ int main(int argc, char const *argv[])
                    isFinalIteration    = n == inputData.numberOfTimeSteps;
 
         if ( outputThisIteration || isFinalIteration ) {
+            
             enginePtr->CopyDeviceToHost();   // Only copy back to host if we are writing to file
 
             std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
