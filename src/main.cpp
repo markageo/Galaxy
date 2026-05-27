@@ -46,10 +46,10 @@ int main(int argc, char const *argv[])
     // Time loop
     std::cout << "Iteration 0 (Written to file)" << std::endl;
     enginePtr->CopyHostToDevice();
+    enginePtr->ComputeAccelerations();
     for ( intType n = 1; n <= inputData.numberOfTimeSteps; n++ ) {
 
         // Propagate particles one timestep
-        enginePtr->ComputeAccelerations();
         enginePtr->Kick();
         enginePtr->Drift();
         enginePtr->ComputeAccelerations();
