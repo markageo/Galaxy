@@ -1,5 +1,5 @@
-numberOfInitialParticles   = 50000
-numberOfTimeSteps          = 1000
+numberOfInitialParticles   = 10000
+numberOfTimeSteps          = 500
 timeStepSize               = 0.1
 
 diskRadius                 = 1
@@ -11,8 +11,10 @@ haloMass                   = 5
 haloScaleRadius            = 10
 gravitationalConstant      = 1
 softeningLength            = 0.03
+forceAlgorithm             = BarnesHut
+maxOpeningAngle            = 0.5
 
-backend                    = CUDA
+backend                    = OpenMP
 
 outputFilePath             = "output/"
 outputFileTimestepInterval = 5

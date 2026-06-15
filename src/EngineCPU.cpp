@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Tree.h"
 
 #include <cmath>
 
@@ -10,6 +11,8 @@ class EngineCPU : public EngineBase
 
     Particles &m_particles;
     const InputData &m_inputData;
+    Tree m_tree;
+    void (EngineCPU::*m_accelerationFunctionPtr)();
 
     public:
 
@@ -22,6 +25,12 @@ class EngineCPU : public EngineBase
         void Kick() override;
         void Drift() override;
         void Synchronise() override;
+
+    private:    
+        void ComputeAccelerationsAllPairs();
+        void ComputeAccelerationsBarnesHut();
+        void BarnesHutAccelerationRecurse( intType, intType );
+        void AddHernquistHaloAcceleration( intType );
 
 };
 
@@ -39,17 +48,48 @@ EngineCPU::EngineCPU( Particles &particles,
                       const InputData &inputData ) : 
         m_particles(particles),
         m_inputData(inputData)
-        {};
+        {
+            switch ( inputData.forceAlgorithm ) {
+                case InputData::ForceAlgorithms::AllPairs:
+                    m_accelerationFunctionPtr = &EngineCPU::ComputeAccelerationsAllPairs;
+                    break;
+
+                case InputData::ForceAlgorithms::BarnesHut:
+                    m_accelerationFunctionPtr = &EngineCPU::ComputeAccelerationsBarnesHut;
+                    break;
+            }
+        };
 
 
 // These are no op on CPU, nothing to allocate or copy
-void EngineCPU::Initialise() { /* NULL */ };
+void EngineCPU::Initialise()       { /* NULL */ };
 void EngineCPU::CopyHostToDevice() { /* NULL */ };
 void EngineCPU::CopyDeviceToHost() { /* NULL */ };
-void EngineCPU::Synchronise() { /* NULL */ };
-
+void EngineCPU::Synchronise()      { /* NULL */ };
 
 void EngineCPU::ComputeAccelerations()
+{ (this->*m_accelerationFunctionPtr)(); }
+
+
+
+// Acceleration due to Hernquist Halo - assumes Galaxy is centered at (0, 0, 0)
+void EngineCPU::AddHernquistHaloAcceleration( intType particleIdx )
+{
+    const floatType R = sqrt( 
+                            std::pow( m_particles.pos[0][particleIdx], 2.0f )
+                          + std::pow( m_particles.pos[1][particleIdx], 2.0f )
+                          + std::pow( m_particles.pos[2][particleIdx], 2.0f )
+                        );
+    const floatType K = - m_inputData.gravitationalConstant * m_inputData.haloMass 
+                        / std::pow( R + m_inputData.haloScaleRadius , 2.0f ) / R;
+    for ( intType i = 0; i != 3; i++ ) {
+        m_particles.accel[i][particleIdx] += K * ( m_particles.pos[i][particleIdx] );
+    }
+}
+
+
+
+void EngineCPU::ComputeAccelerationsAllPairs()
 {
     // Brute force
     #pragma omp parallel for
@@ -81,18 +121,81 @@ void EngineCPU::ComputeAccelerations()
 
         }
 
-        // Acceleration due to Hernquist Halo - assumes Galaxy is centered at (0, 0, 0)
-        const floatType R = sqrt( 
-                                std::pow( m_particles.pos[0][p1], 2.0f )
-                              + std::pow( m_particles.pos[1][p1], 2.0f )
-                              + std::pow( m_particles.pos[2][p1], 2.0f )
-                            );
-        const floatType K = - m_inputData.gravitationalConstant * m_inputData.haloMass 
-                          / std::pow( R + m_inputData.haloScaleRadius , 2.0f ) / R;
-        for ( intType i = 0; i != 3; i++ ) {
-            m_particles.accel[i][p1] += K * ( m_particles.pos[i][p1] );
-        }
+        AddHernquistHaloAcceleration( p1 );
     }
+}
+
+
+
+void EngineCPU::BarnesHutAccelerationRecurse( intType particleIdx,
+                                              intType nodeIdx )
+{
+
+    const Node node = m_tree.nodes[nodeIdx];
+
+    // Avoid force of particle on itself
+    if ( node.isLeaf && node.leafParticleIdx == nodeIdx )
+        return;
+
+    const floatType nodeWidth = node.width;
+    const floatType nodeDistance2 = std::pow( m_particles.pos[0][particleIdx] - node.center[0], 2.0f )
+                                  + std::pow( m_particles.pos[1][particleIdx] - node.center[1], 2.0f ) 
+                                  + std::pow( m_particles.pos[2][particleIdx] - node.center[2], 2.0f );
+    const floatType theta = nodeWidth / sqrt( nodeDistance2 );
+
+    const bool calculateForceOfThisNode = node.isLeaf 
+                                       || theta < m_inputData.maxOpeningAngle;
+
+
+    if ( calculateForceOfThisNode ) {
+
+        const floatType R2 = std::pow( m_particles.pos[0][particleIdx] - node.centerOfMass[0], 2.0f )
+                           + std::pow( m_particles.pos[1][particleIdx] - node.centerOfMass[1], 2.0f ) 
+                           + std::pow( m_particles.pos[2][particleIdx] - node.centerOfMass[2], 2.0f )
+                           + std::pow( m_inputData.softeningLength, 2.0f );
+
+        const floatType R3 = std::pow( R2, 3.0f / 2.0f );
+        const floatType K = m_inputData.gravitationalConstant * node.mass / R3;   // Divide out mass of current particle (p1) to get acceleration
+
+
+        for ( intType i = 0; i != 3; i++ ) {
+            m_particles.accel[i][particleIdx] += K * ( node.centerOfMass[i] - m_particles.pos[i][particleIdx] );
+        }
+
+        return;
+    } 
+
+
+    for ( intType c = 0; c != 8; c++ ) {
+
+        if ( node.childNodeIndices[c] == -1 )
+            continue;
+
+        BarnesHutAccelerationRecurse( particleIdx, node.childNodeIndices[c] );
+
+    }
+
+}
+
+
+
+void EngineCPU::ComputeAccelerationsBarnesHut()
+{
+    m_tree.Build( m_particles );
+
+    #pragma omp parallel for
+    for ( intType p = 0; p != m_particles.count; p++ ) {
+
+        for ( intType i = 0; i != 3; i++ ) {
+            m_particles.accel[i][p] = 0.0f;
+        }
+
+        BarnesHutAccelerationRecurse( p, 0 );
+
+        AddHernquistHaloAcceleration( p );
+
+    }
+  
 }
 
 

@@ -9,6 +9,7 @@
 
 namespace GALAXY {
 
+
 class EngineBase {
 
     public:

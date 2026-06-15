@@ -17,6 +17,7 @@ target_sources( libs
         InputData.h
         InitialConditions.h
         Engine.h 
+        Tree.h
 )
 
 if (USE_CUDA)

@@ -19,9 +19,15 @@ struct InputData
               haloMass,
               haloScaleRadius,
               gravitationalConstant, 
-              softeningLength;
+              softeningLength,
+              maxOpeningAngle;
     intType numberOfTimeSteps;
     floatType timeStepSize;
+
+    enum class ForceAlgorithms {
+        AllPairs, BarnesHut
+    };
+    ForceAlgorithms forceAlgorithm;
 
     enum class Backends {
         CUDA, OpenMP

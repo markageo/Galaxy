@@ -115,8 +115,24 @@ InputData ReadInputData( const std::string &inputFilename )
     inputData.numberOfTimeSteps         = tree.get<intType>( "numberOfTimeSteps" );
     inputData.outputInterval            = tree.get<intType>( "outputFileTimestepInterval" );
 
+    // Force Algorithm from string
+    const std::string forceAlgorithmString = tree.get<std::string>( "forceAlgorithm" );
+    if ( forceAlgorithmString == "AllPairs" ) {
+        inputData.forceAlgorithm = InputData::ForceAlgorithms::AllPairs;
+    } else if ( forceAlgorithmString == "BarnesHut" ) {
+        inputData.forceAlgorithm = InputData::ForceAlgorithms::BarnesHut;
+    } else {
+        throw std::runtime_error( "'" + forceAlgorithmString + "' is not a valid force algorithm!" );
+    }
+
+    // Opening angle parameter only required if using Barnes Hut algorithm
+    if ( inputData.forceAlgorithm == InputData::ForceAlgorithms::BarnesHut ) {
+        inputData.maxOpeningAngle = tree.get<floatType>( "maxOpeningAngle" );
+    }
+    
+
     // Backend from string
-    std::string backendString = tree.get<std::string>( "backend" );
+    const std::string backendString = tree.get<std::string>( "backend" );
     if ( backendString == "OpenMP" ) {
         inputData.backend = InputData::Backends::OpenMP;
     } else if ( backendString == "CUDA" ) {
