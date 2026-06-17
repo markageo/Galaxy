@@ -10,15 +10,62 @@
 
 namespace GALAXY {
 
-struct Node
+
+struct Nodes
 {
-    floatType mass              = 0.0f;                                 // Total mass of all particles in this subtree
-    floatType center[3]         = {0.0f, 0.0f, 0.0f};                   // Geometrical center of this octant
-    floatType centerOfMass[3]   = {0.0f, 0.0f, 0.0f};                   
-    floatType width             = 0.0f;  
-    intType childNodeIndices[8] = {-1, -1, -1, -1, -1, -1, -1, -1};     // Indices of child nodes, -1 if they are empty
-    intType leafParticleIdx     = -1;                                   // Index of particle if this is a leaf, -1 if it is not a leaf or empty leaf
-    bool isLeaf = true;
+    std::vector<floatType> mass;                  // Total mass of all particles in this subtree
+    std::vector<floatType> center[3];             // Geometrical center of this octant
+    std::vector<floatType> centerOfMass[3];                   
+    std::vector<floatType> width;  
+    std::vector<intType> childNodeIndices;        // Indices of child nodes, -1 if they are empty, has size 8 * count, indexed with [nodeIdx * 8 + child].
+    std::vector<intType> leafParticleIdx;         // Index of particle if this is a leaf, -1 if it is not a leaf or empty leaf
+    std::vector<intType> isLeaf;                  // 1 = leaf, 0 = internal
+    intType count = 0;
+
+    void addNode()
+    {
+        mass.push_back( 0.0f );
+        for ( intType i = 0; i < 3; i++ ) {
+            center[i].push_back( 0.0f );
+            centerOfMass[i].push_back( 0.0f );
+        }
+        width.push_back( 0.0f );
+        for ( intType i = 0; i < 8; i++ ) {
+            childNodeIndices.push_back( -1 );
+        }
+        leafParticleIdx.push_back( -1 );
+        isLeaf.push_back( 1 );
+        count++;
+    }
+
+    void clear()
+    {
+        mass.clear();
+        for ( intType i = 0; i < 3; i++ ) {
+            center[i].clear();
+            centerOfMass[i].clear();
+        }
+        width.clear();
+        childNodeIndices.clear();
+        leafParticleIdx.clear();
+        isLeaf.clear();
+        count = 0;
+    }
+
+    void reserve( size_t n )
+    {
+        mass.reserve( n );
+        for ( intType i = 0; i < 3; i++ ) {
+            center[i].reserve( n );
+            centerOfMass[i].reserve( n );
+        }
+        width.reserve( n );
+        childNodeIndices.reserve( 8 * n );
+        leafParticleIdx.reserve( n );
+        isLeaf.reserve( n );
+        count = 0;
+    }
+
 };
 
 
@@ -28,7 +75,7 @@ class Tree
     
 public:
 
-    std::vector<Node> nodes;
+    Nodes nodes;
     intType nParticles;
 
 
@@ -44,7 +91,7 @@ public:
         nodes.reserve( 8 * nParticles );
 
         // Root node
-        nodes.emplace_back();
+        nodes.addNode();
         SetRootCenterAndWidth( particles );
         
         // Recursively add all particles
@@ -76,13 +123,12 @@ private:
             }
         }
 
-        auto &rootNode = nodes.front();
         for ( intType i = 0; i != 3; i++ ) {
             const floatType delta = max[i] - min[i];
-            rootNode.center[i] = min[i] + delta / 2.0f; 
-            rootNode.width     = std::max( rootNode.width, delta);
+            nodes.center[i][0] = min[i] + delta / 2.0f; 
+            nodes.width[0]     = std::max( nodes.width[0], delta);
         }
-        rootNode.width *= (1.0f + 1e-3);    // Tolerence so particles are always within bounds
+        nodes.width[0] *= (1.0f + 1e-3);    // Tolerence so particles are always within bounds
     
     }
 
@@ -95,17 +141,17 @@ private:
     {
 
         // Empty leaf, store body here
-        if ( nodes[nodeIdx].isLeaf && nodes[nodeIdx].leafParticleIdx == -1 ) {
-            nodes[nodeIdx].leafParticleIdx = particleIdx;
+        if ( nodes.isLeaf[nodeIdx] && nodes.leafParticleIdx[nodeIdx] == -1 ) {
+            nodes.leafParticleIdx[nodeIdx] = particleIdx;
             return ;
         }
 
         // Occupied leaf, subdivide
-        else if ( nodes[nodeIdx].isLeaf ) {
+        else if ( nodes.isLeaf[nodeIdx] ) {
 
-            intType existingParticleIdx = nodes[nodeIdx].leafParticleIdx;
-            nodes[nodeIdx].leafParticleIdx = -1;
-            nodes[nodeIdx].isLeaf          = false;
+            intType existingParticleIdx = nodes.leafParticleIdx[nodeIdx];
+            nodes.leafParticleIdx[nodeIdx] = -1;
+            nodes.isLeaf[nodeIdx]          = 0;
 
             InsertParticleIntoChild( nodeIdx, existingParticleIdx, particles, recursionDepth + 1 );
             InsertParticleIntoChild( nodeIdx, particleIdx        , particles, recursionDepth + 1 );
@@ -129,19 +175,19 @@ private:
                                   intType recursionDepth )
     {
 
-        intType octant = GetOctant( nodes[nodeIdx], particles.pos[0][particleIdx], particles.pos[1][particleIdx], particles.pos[2][particleIdx] );
+        intType octant = GetOctant( nodeIdx, particles.pos[0][particleIdx], particles.pos[1][particleIdx], particles.pos[2][particleIdx] );
 
         // Create child node if this is unoccupied
-        if ( nodes[nodeIdx].childNodeIndices[octant] == -1 ) {
+        if ( nodes.childNodeIndices[8*nodeIdx  + octant] == -1 ) {
 
-            nodes.emplace_back();
-            nodes[nodeIdx].childNodeIndices[octant] = static_cast<intType>( nodes.size() ) - 1;
+            nodes.addNode();
+            nodes.childNodeIndices[8*nodeIdx + octant] = static_cast<intType>( nodes.count ) - 1;
 
             SetChildCenterAndWidth(nodeIdx, octant); 
 
         }
 
-        InsertParticle( nodes[nodeIdx].childNodeIndices[octant], particleIdx, particles, recursionDepth );
+        InsertParticle( nodes.childNodeIndices[8*nodeIdx + octant], particleIdx, particles, recursionDepth );
 
     }
 
@@ -162,7 +208,7 @@ private:
     // octant 5: +x, -y, +z (101)
     // octant 6: -x, +y, +z (011)
     // octant 7: +x, +y, +z (111)
-    intType GetOctant( const Node &node,
+    intType GetOctant( intType   nodeIdx,
                        floatType x,
                        floatType y, 
                        floatType z ) const 
@@ -170,13 +216,13 @@ private:
         int octant = 0;
 
         // Set each bit
-        if ( x >= node.center[0] )
+        if ( x >= nodes.center[0][nodeIdx] )
             octant |= 1;
 
-        if ( y >= node.center[1] )
+        if ( y >= nodes.center[1][nodeIdx] )
             octant |= 2;
 
-        if ( z >= node.center[2] )
+        if ( z >= nodes.center[2][nodeIdx] )
             octant |= 4;
 
         return static_cast<intType>( octant );
@@ -187,14 +233,13 @@ private:
     void SetChildCenterAndWidth( intType nodeIdx, 
                                  intType octant )
     {
-        const intType childIdx = nodes[nodeIdx].childNodeIndices[octant];
-        Node &child = nodes[childIdx];
+        const intType childIdx = nodes.childNodeIndices[8*nodeIdx + octant];
 
-        child.width = nodes[nodeIdx].width * 0.5f;
+        nodes.width[childIdx] = nodes.width[nodeIdx] * 0.5f;
 
         for ( intType i = 0; i != 3; i++ ) {
-            child.center[i] = nodes[nodeIdx].center[i] + ( ( octant & (1 << i) ) ?   child.width * 0.5f 
-                                                                                 : - child.width * 0.5f );
+            nodes.center[i][childIdx] = nodes.center[i][nodeIdx] + ( ( octant & (1 << i) ) ?   nodes.width[childIdx] * 0.5f 
+                                                                                           : - nodes.width[childIdx] * 0.5f );
         }
 
     }
@@ -204,17 +249,16 @@ private:
     void ComputeCenterOfMass( intType nodeIdx, 
                               const Particles &particles )
     {
-        Node &node = nodes[ nodeIdx ];
 
         // Just a single particle 
-        if ( node.isLeaf ) {
+        if ( nodes.isLeaf[nodeIdx] ) {
 
             // Not an empty leaf
-            if ( node.leafParticleIdx >= 0 ) {
+            if ( nodes.leafParticleIdx[nodeIdx] >= 0 ) {
                 for ( intType i = 0; i != 3; i++ ) {
-                    node.centerOfMass[i] = particles.pos[i][ node.leafParticleIdx ]; 
+                    nodes.centerOfMass[i][nodeIdx] = particles.pos[i][ nodes.leafParticleIdx[nodeIdx] ]; 
                 }
-                node.mass = particles.mass[ node.leafParticleIdx ];
+                nodes.mass[nodeIdx] = particles.mass[ nodes.leafParticleIdx[nodeIdx] ];
             }
 
             return;
@@ -225,32 +269,32 @@ private:
         // Recurse through the children
         for ( intType c = 0; c != 8; c++ ) {
 
-            if ( node.childNodeIndices[c] == -1 )
+            if ( nodes.childNodeIndices[8*nodeIdx + c] == -1 )
                 continue;
 
-            ComputeCenterOfMass( node.childNodeIndices[c], particles );
+            ComputeCenterOfMass( nodes.childNodeIndices[8*nodeIdx + c], particles );
         }
 
 
-        // Update the centre of mass contribution of the children
+        // Update the center of mass contribution of the children
         for ( intType c = 0; c != 8; c++ ) {
 
-            if ( node.childNodeIndices[c] == -1 )
+            if ( nodes.childNodeIndices[8*nodeIdx + c] == -1 )
                 continue;
 
-            const intType childIdx    = node.childNodeIndices[c];
-            const floatType childMass = nodes[childIdx].mass;
+            const intType childIdx    = nodes.childNodeIndices[8*nodeIdx + c];
+            const floatType childMass = nodes.mass[childIdx];
 
             for ( intType i = 0; i != 3; i++ ) {
-                node.centerOfMass[i] += childMass * nodes[childIdx].centerOfMass[i]; 
+                nodes.centerOfMass[i][nodeIdx] += childMass * nodes.centerOfMass[i][childIdx]; 
             }
-            node.mass += childMass;
+            nodes.mass[nodeIdx] += childMass;
 
         }
 
-        if ( node.mass > 0 ) {
+        if ( nodes.mass[nodeIdx] > 0 ) {
             for ( intType i = 0; i != 3; i++ ) {
-                node.centerOfMass[i] /= node.mass; 
+                nodes.centerOfMass[i][nodeIdx] /= nodes.mass[nodeIdx]; 
             }
         }
 

@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Tree.h"
 
 #include <cuda.h>
 #include <cstring>
@@ -27,6 +28,8 @@ class EngineCUDA : public EngineBase
                m_particlesPinned,
                m_particlesDevice;
     const InputData &m_inputData;
+    Tree m_tree;
+    void (EngineCUDA::*m_accelerationFunctionPtr)();
 
     cudaStream_t m_stream;
 
@@ -50,6 +53,9 @@ class EngineCUDA : public EngineBase
         void AllocateDeviceMemory();
         void AllocateHostPinnedMemory();
         void FreeMemory();
+
+        void ComputeAccelerationsAllPairs();
+        void ComputeAccelerationsBarnesHut();
 };
 
 
@@ -64,12 +70,22 @@ std::unique_ptr<EngineBase> MakeEngineCUDA( Particles &particles,
 
 EngineCUDA::EngineCUDA( Particles &particles,
                         const InputData &inputData ) : 
-                            m_particles(particles),
-                            m_inputData(inputData)
-                        {
-                            m_particlesDevice.count = m_particles.count;
-                            m_particlesPinned.count = m_particles.count;
-                        };
+        m_particles(particles),
+        m_inputData(inputData)
+        {
+            switch ( inputData.forceAlgorithm ) {
+                case InputData::ForceAlgorithms::AllPairs:
+                    m_accelerationFunctionPtr = &EngineCUDA::ComputeAccelerationsAllPairs;
+                    break;
+
+                case InputData::ForceAlgorithms::BarnesHut:
+                    m_accelerationFunctionPtr = &EngineCUDA::ComputeAccelerationsBarnesHut;
+                    break;
+            }
+
+            m_particlesDevice.count = m_particles.count;
+            m_particlesPinned.count = m_particles.count;
+        };
 
 
 
@@ -201,18 +217,23 @@ void EngineCUDA::CopyDeviceToHost()
 
 
 
-__global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
-                                             floatType* __restrict__ ay,
-                                             floatType* __restrict__ az,
-                                             const floatType* __restrict__ x,
-                                             const floatType* __restrict__ y,
-                                             const floatType* __restrict__ z,
-                                             const floatType* __restrict__ mass,
-                                             floatType gravitationalConstant, 
-                                             floatType softeningLength,
-                                             floatType haloMass, 
-                                             floatType haloScaleRadius,
-                                             intType nParticles )
+void EngineCUDA::ComputeAccelerations()
+{ (this->*m_accelerationFunctionPtr)(); }
+
+
+
+__global__ void ComputeAccelerationsAllPairs_kernel( floatType* __restrict__ ax,
+                                                     floatType* __restrict__ ay,
+                                                     floatType* __restrict__ az,
+                                                     const floatType* __restrict__ x,
+                                                     const floatType* __restrict__ y,
+                                                     const floatType* __restrict__ z,
+                                                     const floatType* __restrict__ mass,
+                                                     floatType gravitationalConstant, 
+                                                     floatType softeningLength,
+                                                     floatType haloMass, 
+                                                     floatType haloScaleRadius,
+                                                     intType nParticles )
 {
     // Shared particle data for a given tile, size is dynamically allocated
     extern __shared__ floatType shared[];
@@ -300,10 +321,11 @@ __global__ void ComputeAccelerations_kernel( floatType* __restrict__ ax,
 
 
 
-void EngineCUDA::ComputeAccelerations()
+void EngineCUDA::ComputeAccelerationsAllPairs()
 {
-    int blocks = (m_particlesDevice.count + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    ComputeAccelerations_kernel<<<blocks, BLOCK_SIZE, 4 * BLOCK_SIZE * sizeof(floatType), m_stream>>>
+    const int blocks = (m_particlesDevice.count + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    const int sharedMemSize = 4 * BLOCK_SIZE * sizeof(floatType);
+    ComputeAccelerationsAllPairs_kernel<<<blocks, BLOCK_SIZE, sharedMemSize, m_stream>>>
     ( 
         m_particlesDevice.accel[0], 
         m_particlesDevice.accel[1],
@@ -320,6 +342,20 @@ void EngineCUDA::ComputeAccelerations()
     );
 
     CUDA_CHECK(cudaGetLastError());
+}
+
+
+
+void EngineCUDA::ComputeAccelerationsBarnesHut()
+{
+    CopyDeviceToHost();
+
+    m_tree.Build( m_particles );
+
+    // Copy tree to device
+
+    // Update accelerations
+
 }
 
 
