@@ -138,9 +138,9 @@ void EngineCPU::BarnesHutAccelerationRecurse( intType particleIdx,
         return;
 
     const floatType nodeWidth = nodes.width[nodeIdx];
-    const floatType nodeDistance2 = std::pow( m_particles.pos[0][particleIdx] - nodes.center[0][nodeIdx], 2.0f )
-                                  + std::pow( m_particles.pos[1][particleIdx] - nodes.center[1][nodeIdx], 2.0f ) 
-                                  + std::pow( m_particles.pos[2][particleIdx] - nodes.center[2][nodeIdx], 2.0f );
+    const floatType nodeDistance2 = std::pow( m_particles.pos[0][particleIdx] - nodes.centerOfMass[0][nodeIdx], 2.0f )
+                                  + std::pow( m_particles.pos[1][particleIdx] - nodes.centerOfMass[1][nodeIdx], 2.0f ) 
+                                  + std::pow( m_particles.pos[2][particleIdx] - nodes.centerOfMass[2][nodeIdx], 2.0f );
     const floatType theta = nodeWidth / sqrt( nodeDistance2 );
 
     const bool calculateForceOfThisNode = nodes.isLeaf[nodeIdx] 
@@ -149,13 +149,11 @@ void EngineCPU::BarnesHutAccelerationRecurse( intType particleIdx,
 
     if ( calculateForceOfThisNode ) {
 
-        const floatType R2 = std::pow( m_particles.pos[0][particleIdx] - nodes.centerOfMass[0][nodeIdx], 2.0f )
-                           + std::pow( m_particles.pos[1][particleIdx] - nodes.centerOfMass[1][nodeIdx], 2.0f ) 
-                           + std::pow( m_particles.pos[2][particleIdx] - nodes.centerOfMass[2][nodeIdx], 2.0f )
+        const floatType R2 = nodeDistance2
                            + std::pow( m_inputData.softeningLength, 2.0f );
 
         const floatType R3 = std::pow( R2, 3.0f / 2.0f );
-        const floatType K = m_inputData.gravitationalConstant * nodes.mass[nodeIdx] / R3;   // Divide out mass of current particle (p1) to get acceleration
+        const floatType K = m_inputData.gravitationalConstant * nodes.mass[nodeIdx] / R3;   // Divide out mass of current particle to get acceleration
 
 
         for ( intType i = 0; i != 3; i++ ) {
