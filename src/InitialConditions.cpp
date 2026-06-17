@@ -59,11 +59,11 @@ floatType GetCircularDiskVelocity( floatType r,
                                    floatType diskRadius, 
                                    floatType gravitationalConstant )
 {
-    const floatType y  = std::max( 1e-6, r / ( 2.0f * diskRadius ) );   // Clip to avoid zero value at zero
-    const floatType v2 = 4.0f * M_PI * gravitationalConstant * diskCentralSurfaceDensity * diskRadius 
+    const floatType y  = std::max( (floatType)1e-6, r / ( 2.0f * diskRadius ) );   // Clip to avoid zero value at zero
+    const floatType v2 = 4.0f * (floatType)M_PI * gravitationalConstant * diskCentralSurfaceDensity * diskRadius 
                        * y * y 
-                       * ( std::cyl_bessel_i( 0, y ) * std::cyl_bessel_k( 0, y )  -  std::cyl_bessel_i( 1, y ) * std::cyl_bessel_k( 1, y ) );
-    return sqrt(v2);
+                       * (floatType)( std::cyl_bessel_i( 0, y ) * std::cyl_bessel_k( 0, y )  -  std::cyl_bessel_i( 1, y ) * std::cyl_bessel_k( 1, y ) );
+    return (floatType)sqrt(v2);
 }
 
 
@@ -87,8 +87,8 @@ void SetExponentialDisk( Particles &particles,
     std::uniform_real_distribution<floatType> distr(0.0f, 1.0f); 
 
     // Mass of each particle, comes from integral of disk surface density profile 
-    const floatType diskSurfaceDensity = inputData.diskMass / ( 2.0f * M_PI * std::pow( inputData.diskRadius, 2.0f ) ),
-                    particleMass = inputData.diskMass / inputData.numberOfInitialParticles;
+    const floatType diskSurfaceDensity = inputData.diskMass / ( 2.0f * (floatType)M_PI * std::pow( inputData.diskRadius, 2.0f ) ),
+                    particleMass = inputData.diskMass / static_cast<floatType>(inputData.numberOfInitialParticles);
 
 
     for ( intType p = 0; p != inputData.numberOfInitialParticles; p++ ) {
@@ -97,11 +97,11 @@ void SetExponentialDisk( Particles &particles,
         const floatType r = SampleExponentialRadius( inputData.diskRadius, inputData.diskCutoffRadius, gen, distr );
 
         // Random azimuth
-        const floatType theta = 2.0f * M_PI * distr(gen);
+        const floatType theta = 2.0f * (floatType)M_PI * distr(gen);
 
         // Vertical position from sech^2 profile, the CDF is a tanh
         // Argument is random number in (-1, 1), with some tolerence since tanh blows up a +/- 1.
-        const floatType tol = 1e-6;
+        const floatType tol = 1e-6f;
         const floatType z = 2.0f * inputData.diskThickness * std::tanh( 2.0f * (1.0f - tol) * ( distr(gen) - 0.5f ) );    
 
         particles.pos[0][p] = r * std::cos( theta );

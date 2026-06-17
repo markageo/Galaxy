@@ -75,7 +75,7 @@ void EngineCPU::ComputeAccelerations()
 // Acceleration due to Hernquist Halo - assumes Galaxy is centered at (0, 0, 0)
 void EngineCPU::AddHernquistHaloAcceleration( intType particleIdx )
 {
-    const floatType R = sqrt( 
+    const floatType R = (floatType)sqrt( 
                             std::pow( m_particles.pos[0][particleIdx], 2.0f )
                           + std::pow( m_particles.pos[1][particleIdx], 2.0f )
                           + std::pow( m_particles.pos[2][particleIdx], 2.0f )
@@ -141,7 +141,7 @@ void EngineCPU::BarnesHutAccelerationRecurse( intType particleIdx,
     const floatType nodeDistance2 = std::pow( m_particles.pos[0][particleIdx] - nodes.centerOfMass[0][nodeIdx], 2.0f )
                                   + std::pow( m_particles.pos[1][particleIdx] - nodes.centerOfMass[1][nodeIdx], 2.0f ) 
                                   + std::pow( m_particles.pos[2][particleIdx] - nodes.centerOfMass[2][nodeIdx], 2.0f );
-    const floatType theta = nodeWidth / sqrt( nodeDistance2 );
+    const floatType theta = nodeWidth / (floatType)sqrt( nodeDistance2 );
 
     const bool calculateForceOfThisNode = nodes.isLeaf[nodeIdx] 
                                        || theta < m_inputData.maxOpeningAngle;

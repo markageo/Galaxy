@@ -1,5 +1,5 @@
 # Galaxy
-Simulates the gravitational N-body problem. Can perform force calculation using either an all-pairs algorithm (using OpenMP or CUDA backends) or the Barnes Hut algorithm (currently OpenMP backend only). A simple exponential disk galaxy is used as the initial condition with a Hernquist dark matter halo. Particle positions with time are written to csv files for visualisation (using [Paraview](https://www.paraview.org/) for example). Integration and force calculations can be done using either OpenMP or CUDA backends, which are selected in the input file (see `example.inp` in the `cases` directory). 
+Simulates the gravitational N-body problem using either OpenMP or CUDA backends. Can perform force calculation using either an all-pairs algorithm or the Barnes-Hut algorithm. For the Barnes-Hut Algorithm, the tree is constructed on the CPU, even if a CUDA backend is used. Tree traversal and force calculation is done on the GPU however. A simple exponential disk galaxy is used as the initial condition with a Hernquist dark matter halo. Particle positions with time are written to csv files for visualisation (using [Paraview](https://www.paraview.org/) for example). Simulation parameters, including which backend (CUDA or OpenMP) and which force calculation algorithm to use can be set in the input file (see `example.inp` in the `cases` directory). 
 
 ### Build and usage
 
@@ -13,6 +13,5 @@ Which will create an executable called `galaxy`. This can then be executed with 
 
     ./galaxy cases/example.inp
 
-Where `example.inp` is the input file used to run the code. All solver settings are controlled through this single input file. 
 
 

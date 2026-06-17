@@ -11,6 +11,22 @@
 namespace GALAXY {
 
 
+// For use on device. uses raw pointers, intended to be copied into from host.
+struct DeviceNodes
+{
+    floatType *mass             = nullptr;                       // Total mass of all particles in this subtree
+    floatType *centerOfMass[3]  = {nullptr, nullptr, nullptr};   // Geometrical center of this octant
+    floatType *width            = nullptr;
+    intType   *childNodeIndices = nullptr;                       // Indices of child nodes, -1 if they are empty, has size 8 * count, indexed with [nodeIdx * 8 + child].
+    intType   *leafParticleIdx  = nullptr;                       // Index of particle if this is a leaf, -1 if it is not a leaf or empty leaf
+    intType   *isLeaf           = nullptr;                       // 1 = leaf, 0 = internal
+    intType    count            = 0;
+    intType    allocCount       = 0;                             // Size of allocated arrays, can be larger than the number of nodes
+};
+
+
+
+// For use on host. Uses std::vector which makes creating tree simpler.
 struct Nodes
 {
     std::vector<floatType> mass;                  // Total mass of all particles in this subtree
@@ -128,7 +144,7 @@ private:
             nodes.center[i][0] = min[i] + delta / 2.0f; 
             nodes.width[0]     = std::max( nodes.width[0], delta);
         }
-        nodes.width[0] *= (1.0f + 1e-3);    // Tolerence so particles are always within bounds
+        nodes.width[0] *= (1.0f + 1e-3f);    // Tolerence so particles are always within bounds
     
     }
 

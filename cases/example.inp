@@ -14,7 +14,7 @@ softeningLength            = 0.03
 forceAlgorithm             = BarnesHut
 maxOpeningAngle            = 0.5
 
-backend                    = OpenMP
+backend                    = CUDA
 
 outputFilePath             = "output/"
 outputFileTimestepInterval = 5
