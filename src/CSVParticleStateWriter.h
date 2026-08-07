@@ -2,6 +2,7 @@
 #define GALAXY_CSV_PARTILCE_WRITER
 
 #include "Particles.h"
+#include "IOTools.h"
 
 #include <string>
 #include <iostream>
@@ -23,7 +24,7 @@ class CSVFile
     public:
         CSVFile( const std::string &filename, 
                  const int precision = GALAXY_CSV_FILE_WRITE_PRECISION ) :
-            m_fileStream( filename ),
+            m_fileStream( GALAXY::IOTOOLS::AddFileExtension(filename, ".csv") ), 
             m_precision( precision )
         {           
 
@@ -64,13 +65,13 @@ class CSVFile
 
 
 
-void WriteParticleStateToFile( const Particles &particles,
-                               const std::string &filename, 
-                               const int precision = GALAXY_CSV_FILE_WRITE_PRECISION )
+void WriteParticleStateToCSVFile( const Particles &particles,
+                                  const std::string &filename,
+                                  intType timeStep )
 {
     using namespace internal;
 
-    CSVFile csvFile( filename, precision );
+    CSVFile csvFile( filename, GALAXY_CSV_FILE_WRITE_PRECISION );
     
     // Write header
     csvFile.WriteLine( "x", 

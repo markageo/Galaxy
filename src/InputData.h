@@ -34,6 +34,11 @@ struct InputData
     };
     Backends backend;
 
+    enum class StateFileFormats {
+        CSV, HDF5
+    };
+    StateFileFormats stateFileFormat;
+
     std::string outputPath;
     intType outputInterval;
 };

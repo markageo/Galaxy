@@ -34,6 +34,17 @@ else()
 endif()
 
 
+# Check if HDF5 is installed
+find_package(HDF5 QUIET COMPONENTS C)
+
+if(HDF5_FOUND)
+    set(HAS_HDF5 TRUE)
+    message(STATUS "HDF5 found: ${HDF5_VERSION} (${HDF5_INCLUDE_DIRS})")
+else()
+    set(HAS_HDF5 FALSE)
+    message(STATUS "HDF5 not found — building without HDF5 snapshot output.")
+endif()
+
 
 # Add address sanitizer to the debug build
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")

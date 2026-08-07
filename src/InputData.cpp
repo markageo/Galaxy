@@ -145,6 +145,20 @@ InputData ReadInputData( const std::string &inputFilename )
         throw std::runtime_error( "'" + backendString + "' is not a valid backend!" );
     }
 
+    // CSV of HDF5 format (requires HDF5 library to be installed)
+    const std::string stateOutputFileFormatString = tree.get<std::string>( "stateOutputFileFormat" );
+    if        ( stateOutputFileFormatString == "CSV" ) {
+        inputData.stateFileFormat = InputData::StateFileFormats::CSV;
+    } else if ( stateOutputFileFormatString == "HDF5" ) {
+        #ifdef HAS_HDF5
+            inputData.stateFileFormat = InputData::StateFileFormats::HDF5;
+        #else
+            throw std::runtime_error( "libhdf5 not available, cannot use HDF5 file format for state output!" );
+        #endif
+    } else {
+        throw std::runtime_error( "'" + stateOutputFileFormatString + "' is not a valid state file format!" );
+    }
+
     inputData.outputPath = tree.get<std::string>("outputFilePath");
     IOTOOLS::PrependRelativePath( inputData.outputPath, inputFileDirectory );
 

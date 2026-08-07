@@ -13,7 +13,7 @@ target_sources( libs
         InputParser.h
         Particles.h
         Types.h
-        CSVParticleWriter.h
+        CSVParticleStateWriter.h
         InputData.h
         InitialConditions.h
         Engine.h 
@@ -24,6 +24,13 @@ if (USE_CUDA)
     target_sources( libs PRIVATE EngineCUDA.cu )
 endif()
 
+
+if (HAS_HDF5)
+    target_compile_definitions(libs PUBLIC HAS_HDF5)
+    target_include_directories(libs PUBLIC ${HDF5_INCLUDE_DIRS})
+    target_link_libraries(libs PUBLIC ${HDF5_LIBRARIES})
+    target_sources( libs PRIVATE HDF5ParticleStateWriter.h )
+endif()
 
 target_compile_options(libs PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic>

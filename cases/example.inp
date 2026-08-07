@@ -1,4 +1,4 @@
-numberOfInitialParticles   = 10000
+numberOfInitialParticles   = 1000
 numberOfTimeSteps          = 500
 timeStepSize               = 0.1
 
@@ -14,7 +14,8 @@ softeningLength            = 0.03
 forceAlgorithm             = BarnesHut
 maxOpeningAngle            = 0.5
 
-backend                    = CUDA
+backend                    = OpenMP
 
 outputFilePath             = "output/"
-outputFileTimestepInterval = 5
+outputFileTimestepInterval = 1
+stateOutputFileFormat      = HDF5

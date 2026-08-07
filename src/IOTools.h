@@ -43,7 +43,6 @@ namespace IOTOOLS
     inline std::string RemoveFileExtension( const std::string &filename,
                                             const std::string &fileExtension )
     {
-        // Check if there is a .vtk extension and remove it
         size_t lastPointPosition = filename.find_last_of(".");
         if ( lastPointPosition == std::string::npos ) {
             return filename;
@@ -53,6 +52,16 @@ namespace IOTOOLS
         }
         return filename;
     }
+
+
+    // Add file extension to filename
+    inline std::string AddFileExtension( const std::string &filename,
+                                         const std::string &fileExtension )
+    {   
+        // Don't double-add the file extension
+        return RemoveFileExtension( filename, fileExtension ) + fileExtension;
+    }
+
 
     // If a path is not an absolute path, add the given directory to it
     inline void PrependRelativePath( std::string &pathString,
@@ -64,6 +73,13 @@ namespace IOTOOLS
             if ( !directoryToPrependString.empty() )
                 pathString = directoryToPrependString + "/" + pathString;
         }
+    }
+
+
+    // Return the filename with the path stripped
+    inline std::string StripPath( const std::string &filename )
+    {
+        return std::filesystem::path(filename).filename().string();
     }
 
 

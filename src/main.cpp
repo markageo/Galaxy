@@ -6,13 +6,18 @@
 
 #include <iostream>
 #include <memory>
+#include <functional>
 #include <omp.h>
 
 #include "Particles.h"
-#include "CSVParticleWriter.h"
+#include "CSVParticleStateWriter.h"
+#if HAS_HDF5
+    #include "HDF5ParticleStateWriter.h"
+#endif
 #include "InputData.h"
 #include "InitialConditions.h"
 #include "Engine.h"
+
 
 int main(int argc, char const *argv[])
 {
@@ -37,9 +42,22 @@ int main(int argc, char const *argv[])
     }
     enginePtr->Initialise();
     
-    // Write initial condition to file
-    std::string filename = inputData.outputPath + "particles_" + std::to_string(0) + ".csv";
-    WriteParticleStateToFile( particles, filename );
+    // Set particle state function and write initial condition to file
+    std::function<void(const Particles &, const std::string &, intType )> WriteParticleStateToFile;
+    switch ( inputData.stateFileFormat ) {
+        case InputData::StateFileFormats::CSV:
+            WriteParticleStateToFile = WriteParticleStateToCSVFile;
+            break;
+        case InputData::StateFileFormats::HDF5:
+            #ifdef HAS_HDF5
+                WriteParticleStateToFile = WriteParticleStateToHDF5File;
+            #endif
+            break;
+    }
+
+    std::string filename = inputData.outputPath + "particles_" + std::to_string(0);
+    WriteParticleStateToFile( particles, filename, 0 );
+        
 
     bool writeDuringRun = inputData.outputInterval != 0;
 
@@ -66,8 +84,8 @@ int main(int argc, char const *argv[])
             
             enginePtr->CopyDeviceToHost();   // Only copy back to host if we are writing to file
 
-            std::string filename = inputData.outputPath + "particles_" + std::to_string(n) + ".csv";
-            WriteParticleStateToFile( particles, filename );
+            std::string filename = inputData.outputPath + "particles_" + std::to_string(n);
+            WriteParticleStateToFile( particles, filename, n );
             std::cout << " (Written to file)";
         }
 
